@@ -315,11 +315,21 @@ parsePrintValueFromContract = do
                entryPointsParserPrefs
                (flip info fullDesc $ parsedValue')
                args'
-           caseAltE (\isFail x -> fail . unlines $ "unable to parse args:" : show (isFail, x) : args') TL.putStrLn michelsonStr')
+           caseAltE
+             (\isFail x -> fail . unlines $ "unable to parse args:" : show (isFail, x) : args')
+             -- (let h =  TL.putStrLn michelsonStr' `asTypeOf` _ -- :: IO ()
+             (let h =  TL.putStrLn (TL.pack "b4") `asTypeOf` _ -- :: IO ()
+             in TL.putStrLn michelsonStr'))
+                -- TL.putStrLn (TL.pack "b4")
+                -- >> TL.putStrLn michelsonStr'
+                -- (let h = TL.putStrLn michelsonStr' `asTypeOf` _
+                -- in TL.putStrLn (TL.pack "afta")))
          (do
            putStrLn @String "Available commands:"
            putStrLn @String ""
-           putStrLn helpLines)
+           putStrLn @String "Before helplines"
+           putStrLn helpLines
+           putStrLn @String "After helplines" )
          (fmap ("--help" `isInfixOf`) args' == [True])
   where
     entryPointsParserPrefs :: ParserPrefs
@@ -373,5 +383,3 @@ parsePrintValueFromContract = do
 
 -- > exampleParseEpValue ["(:+) \"\" ((:+) \"set\" ((:*) ((:*) Here Here) ((:*) Here Here)))", "--user", "23", "--val", "False", "--info", "\"hello_world\"", "--extra", "42"]
 -- {"path":"set","fields":{"extra":{"int":"42"},"user":{"int":"23"},"val":{"args":[],"prim":"False","annots":[]},"info":{"string":"hello_world"}}}
-
-
