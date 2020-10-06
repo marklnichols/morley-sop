@@ -3,6 +3,8 @@ dist
 db.json
 .DS_Store
 TAGS
+dist-newstyle
+.projetile
 
 # hpack
 **/*.cabal

@@ -26,6 +26,9 @@ import Michelson.Typed.T.Alg
 import Data.Singletons.TypeLits
 import Data.Singletons.Prelude
 
+import qualified Debug.Trace as D
+import qualified Prelude as P (show)
+
 epFieldRecResolveOr :: forall s f r ta tb. (IsString s, Show s, Eq s, AltError [s] f, Show r) => (Maybe s, TOpq -> Maybe s -> f r) -> (TAlg, TAlg) -> (s, s) -> AnnotatedAlg s ta -> AnnotatedAlg s tb -> Path s -> Maybe s -> f r
 epFieldRecResolveOr (name, fs) (ta, tb) (aa, ab) as bs ((:+) entrypointName epPath) fieldAnn =
   (bool_
@@ -184,6 +187,7 @@ traverseEpPaths _fs (ATOpq ta) = pureState' (ATOpq ta)
 
 uniqifyWithKey :: forall k s. (Ord k, IsString s, Semigroup s) => k -> s -> State' (ListMap k Nat) s
 uniqifyWithKey key annotation =
+  error "uniqifyWithKey" >>
   (lookupModifyListMap
     0
     (\numAtPath ->
@@ -203,29 +207,46 @@ uniqifyWithKey key annotation =
 -- count the number of occurrences of the path, then append "_n" if non-zero.
 -- skip non-pair-field empty annotations
 uniqifyEpPathsStepSimple :: forall s. (Ord s, IsString s, Semigroup s) => Path s -> Bool -> s -> State' (ListMap s Nat) s
-uniqifyEpPathsStepSimple _epPath _isField annotation = uniqifyWithKey annotation annotation
+uniqifyEpPathsStepSimple _epPath _isField annotation =
+  error "uniqifyEpPathsStepSimple" >>
+  uniqifyWithKey annotation annotation
 
 uniqifyEpPathsSimpler :: forall s t. (Ord s, IsString s, Semigroup s) => AnnotatedAlg s t -> AnnotatedAlg s t
 uniqifyEpPathsSimpler ann =
+  D.trace "***  )- TBD ***" (
   traverseEpPaths uniqifyEpPathsStepSimple ann `evalState'`
-  emptyListMap
+  emptyListMap)
 
-uniqifyEpAnnotationsStep :: forall s. (Ord s, IsString s, Semigroup s) => Path s -> Bool -> s -> State' (ListMap s Nat) s
-uniqifyEpAnnotationsStep _epPath False annotation = uniqifyWithKey annotation annotation
-uniqifyEpAnnotationsStep _epPath True annotation = pureState' annotation
+-- uniqifyEpAnnotationsStep :: forall s. (Ord s, IsString s, Semigroup s) => Path s -> Bool -> s -> State' (ListMap s Nat) s
+uniqifyEpAnnotationsStep :: forall s. (Ord s, IsString s, Semigroup s, Show s) => Path s -> Bool -> s -> State' (ListMap s Nat) s
+uniqifyEpAnnotationsStep _epPath False annotation =
+  let str = "*** uniqifyEpAnnotationStep w/False - " ++ P.show _epPath ++ " ***"
+  in D.trace str $ uniqifyWithKey annotation annotation
+uniqifyEpAnnotationsStep _epPath True annotation =
+  let str = "*** uniqifyEpAnnotationStep w/True - " ++ P.show _epPath ++ " ***"
+  in D.trace str $ pureState' annotation
 
 -- count the number of occurrences of the path, then append "_n" if non-zero.
 -- skip non-pair-field empty annotations
-uniqifyEpFieldsStep :: forall s. (Ord s, IsString s, Semigroup s) => Path s -> Bool -> s -> State' (ListMap (Path s, s) Nat) s
-uniqifyEpFieldsStep _epPath False annotation = pureState' annotation
-uniqifyEpFieldsStep epPath True annotation = uniqifyWithKey (epPath, annotation) annotation
+-- uniqifyEpFieldsStep :: forall s. (Ord s, IsString s, Semigroup s) => Path s -> Bool -> s -> State' (ListMap (Path s, s) Nat) s
+uniqifyEpFieldsStep :: forall s. (Ord s, IsString s, Semigroup s, Show s) => Path s -> Bool -> s -> State' (ListMap (Path s, s) Nat) s
+uniqifyEpFieldsStep _epPath False annotation =
+  -- let str = ppPath _epPath
+  let str = "*** uniqifyEpFieldsStep w/False - " ++ P.show _epPath ++ " ***"
+  in D.trace str $ pureState' annotation
+uniqifyEpFieldsStep epPath True annotation =
+  let str = "*** uniqifyEpFieldsStep w/True - " ++ P.show epPath ++ " ***"
+  in D.trace str $ uniqifyWithKey (epPath, annotation) annotation
 
-uniqifyEpPaths :: forall s t. (Ord s, IsString s, Semigroup s) => AnnotatedAlg s t -> AnnotatedAlg s t
+-- uniqifyEpPaths :: forall s t. (Ord s, IsString s, Semigroup s) => AnnotatedAlg s t -> AnnotatedAlg s t
+uniqifyEpPaths :: forall s t. (Ord s, IsString s, Semigroup s, Show s) => AnnotatedAlg s t -> AnnotatedAlg s t
 uniqifyEpPaths ann =
+  D.trace "Types.uniquifyEpPaths" (
+  --todo: print
   traverseEpPaths uniqifyEpFieldsStep
   (traverseEpPaths uniqifyEpAnnotationsStep ann
   `evalState'` emptyListMap)
-  `evalState'` emptyListMap
+  `evalState'` emptyListMap)
 
 {-
 $(singletonsOnly [d|
@@ -310,4 +331,3 @@ $(singletonsOnly [d|
 
   |])
 -}
-

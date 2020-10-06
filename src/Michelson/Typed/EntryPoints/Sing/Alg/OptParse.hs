@@ -307,29 +307,29 @@ parsePrintValueFromContract = do
     (contractSrc:args') -> do
       -- putDoc $ parserUsage entryPointsParserPrefs (parsePrintValueFromContractSource True $ fromString contractSrc) "hello world!"
       -- putStrLn @String ""
+      putStrLn $ "contractSrc:\n" ++ fromString contractSrc ++ "\n"
       let (helpLines, parsedValue') = parsePrintValueFromContractSource True $ fromString contractSrc
       bool
+         -- False (no --help)
          (do
+           -- handleParseResult $ etc... :: IO (AltE [String] TL.Text)
+           -- michelsonStr' :: AltE [String] TL.Text
            michelsonStr' <- handleParseResult $
-             execParserPure
-               entryPointsParserPrefs
-               (flip info fullDesc $ parsedValue')
-               args'
+              execParserPure
+                entryPointsParserPrefs
+                (flip info fullDesc $ parsedValue')
+                args'
+
            caseAltE
              (\isFail x -> fail . unlines $ "unable to parse args:" : show (isFail, x) : args')
-             -- (let h =  TL.putStrLn michelsonStr' `asTypeOf` _ -- :: IO ()
-             (let h =  TL.putStrLn (TL.pack "b4") `asTypeOf` _ -- :: IO ()
-             in TL.putStrLn michelsonStr'))
-                -- TL.putStrLn (TL.pack "b4")
-                -- >> TL.putStrLn michelsonStr'
-                -- (let h = TL.putStrLn michelsonStr' `asTypeOf` _
-                -- in TL.putStrLn (TL.pack "afta")))
+             TL.putStrLn
+             michelsonStr')
+         -- True (--help)
          (do
            putStrLn @String "Available commands:"
            putStrLn @String ""
-           putStrLn @String "Before helplines"
-           putStrLn helpLines
-           putStrLn @String "After helplines" )
+           putStrLn helpLines)
+         -- condition for bool...
          (fmap ("--help" `isInfixOf`) args' == [True])
   where
     entryPointsParserPrefs :: ParserPrefs

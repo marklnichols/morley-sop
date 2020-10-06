@@ -66,4 +66,3 @@ $(singletonsOnly [d|
     throwAlt (isFailXs || isFailYs) (mergeErrors errXs errYs)
 
   |])
-
