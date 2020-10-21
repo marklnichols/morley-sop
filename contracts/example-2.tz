@@ -1,9 +1,9 @@
-parameter (or (or (or (pair %transfer (address %the_from)
-                                      (pair (address %the_to)
-                                            (nat %the_value)))
-                      (pair %approve (address :spender)
-                                     (nat :value)))
-                  (pair %getBalance (address :owner) (contract :callback nat)))
+parameter (or (or (or (pair %transfer (address %from)
+                                      (pair (address %to)
+                                            (nat %value)))
+                      (pair %approve (address %spender)
+                                     (nat %value)))
+                  (pair %getBalance (address %owner) (address %callback)))
               (pair %mint
                  (pair (address %address) (nat %amount))
                  (pair (string %symbol) (nat %token_id))));
@@ -15,8 +15,8 @@ storage (pair (big_map address
                     (pair bool
                           nat)));
 code { FAILWITH }
-# parameter (or (or (pair %transfer (address :from)
-#                                       (pair (address :to)
-#                                             (nat :value)))
-#                   (pair %getBalance (address :owner) (contract nat)))
+# parameter (or (or (pair %transfer (address %from)
+#                                       (pair (address %to)
+#                                             (nat %value)))
+#                   (pair %getBalance (address %owner) (contract nat)))
 #               (bool %setPause));
