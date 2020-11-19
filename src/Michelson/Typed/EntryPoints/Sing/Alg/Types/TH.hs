@@ -2,6 +2,8 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TypeOperators #-}
 
+{-# LANGUAGE TemplateHaskell #-}
+
 {-# OPTIONS -Wno-missing-export-lists -Wno-unused-type-patterns #-}
 
 module Michelson.Typed.EntryPoints.Sing.Alg.Types.TH where
@@ -32,6 +34,12 @@ import Data.Singletons.Prelude.Bool
 import Data.Singletons.Prelude.IsString
 import Data.Singletons.Prelude.List
 
+import qualified Debug.Trace as D
+import qualified Prelude as P (show)
+
+import Language.Haskell.TH
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.IO as TL
 
 type SymAnn = AnnotatedAlg Symbol
 
@@ -221,8 +229,12 @@ $(singletonsOnly [d|
     emptyListMap
 
   uniqifyEpAnnotationsStep :: forall s. (Ord s, IsString s, Semigroup s) => Path s -> Bool -> s -> State' (ListMap s Nat) s
-  uniqifyEpAnnotationsStep _epPath False annotation = uniqifyWithKey annotation annotation
-  uniqifyEpAnnotationsStep _epPath True annotation = pureState' annotation
+  uniqifyEpAnnotationsStep _epPath False annotation = {- uniqifyWithKey annotation annotation -}
+    -- runIO $ putStrLn $ "*** uniqifyEpAnnotationStep w/False - " ++ P.show _epPath ++ " ***"
+    uniqifyWithKey annotation annotation
+  uniqifyEpAnnotationsStep _epPath True annotation = {- pureState' annotation -}
+    -- runIO $ putStrLn $ "*** uniqifyEpAnnotationStep w/True - " ++ P.show _epPath ++ " ***"
+    pureState' annotation
 
   -- count the number of occurrences of the path, then append "_n" if non-zero.
   -- skip non-pair-field empty annotations
@@ -238,4 +250,3 @@ $(singletonsOnly [d|
     `evalState'` emptyListMap
 
   |])
-

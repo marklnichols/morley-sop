@@ -66,6 +66,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.IO as TL
 
+import Debug.Trace
+
 parseNS :: forall a m (f :: a -> Type) (xs :: [a]). (HasDict1 a, Alternative m, SingI xs)
   => (String -> m Void)
   -> (forall (x :: a). SingI x => m (f x))
@@ -278,10 +280,16 @@ parsePrintValue :: forall t (ann :: SymAnn t). (SingI t, SingI ann)
   => Bool
   -> (String, Parser (AltE [String] TL.Text))
 parsePrintValue forceSingleLine =
+  -- error "Don't force the line, man"
   withDict1 (singFromTAlg (sing @t)) $
   assertOpAbsense (singFromTAlg (sing @t)) $
-  (fmap . fmap) (printTypedValue forceSingleLine) <$>
-  parseValue @t @ann
+  --MLN: printTypeValue from Michelson.Printer
+  -- printTypedValue :: forall t. ProperPrintedValBetterErrors t => Bool -> Value t -> Text
+
+  -- (fmap . fmap) (printTypedValue forceSingleLine) <$>
+  -- parseValue @t @ann
+  let pair = (fmap . fmap) (printTypedValue forceSingleLine) <$> parseValue @t @ann
+  in Debug.Trace.trace ("This is a trace: " ++ fst pair) pair
 
 -- NOTE: convert the field annotations to type annotations for convenience: sFieldToTypeAnn
 parsePrintValueFromContractSource :: ()
@@ -307,13 +315,21 @@ parsePrintValueFromContract = do
     (contractSrc:args') -> do
       -- putDoc $ parserUsage entryPointsParserPrefs (parsePrintValueFromContractSource True $ fromString contractSrc) "hello world!"
       -- putStrLn @String ""
+
+      -- MLN: the contract:
       putStrLn $ "contractSrc:\n" ++ fromString contractSrc ++ "\n"
+
       let (helpLines, parsedValue') = parsePrintValueFromContractSource True $ fromString contractSrc
+      -- let h_ = parsedValue' `asTypeOf` _ -- :: Parser (AltE [String] TL.Text)
       bool
          -- False (no --help)
          (do
            -- handleParseResult $ etc... :: IO (AltE [String] TL.Text)
            -- michelsonStr' :: AltE [String] TL.Text
+
+           -- MLN: the arguments when finding a path to an annotation
+           putStrLn $ "parsePrintValueFromContact - args': " ++ show args'
+
            michelsonStr' <- handleParseResult $
               execParserPure
                 entryPointsParserPrefs
